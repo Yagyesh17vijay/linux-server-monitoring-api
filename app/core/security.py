@@ -1,15 +1,34 @@
-from passlib.context import CryptContext
-from jose import jwt
-from jose import JWTError
+
+import os
 from datetime import datetime, timedelta
+
+from dotenv import load_dotenv
+from jose import jwt, JWTError
+from passlib.context import CryptContext
+
+
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY is missing. Add it to your .env file."
+    )
+
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto"
 )
 
+
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
+
 
 def verify_password(
     plain_password: str,
@@ -20,12 +39,10 @@ def verify_password(
         hashed_password
     )
 
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
+
     expire = datetime.utcnow() + timedelta(
         minutes=ACCESS_TOKEN_EXPIRE_MINUTES
     )
@@ -39,7 +56,9 @@ def create_access_token(data: dict) -> str:
         SECRET_KEY,
         algorithm=ALGORITHM
     )
+
     return encoded_jwt
+
 
 def verify_access_token(token: str) -> str:
     try:
@@ -52,10 +71,11 @@ def verify_access_token(token: str) -> str:
         username = payload.get("sub")
 
         if username is None:
-            raise JWTError("Token does not contain a subject")
+            raise JWTError(
+                "Token does not contain a subject"
+            )
 
         return username
 
     except JWTError:
         raise
-
