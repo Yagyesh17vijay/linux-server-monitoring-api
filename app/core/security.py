@@ -1,5 +1,6 @@
 from passlib.context import CryptContext
 from jose import jwt
+from jose import JWTError
 from datetime import datetime, timedelta
 
 pwd_context = CryptContext(
@@ -39,3 +40,22 @@ def create_access_token(data: dict) -> str:
         algorithm=ALGORITHM
     )
     return encoded_jwt
+
+def verify_access_token(token: str) -> str:
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
+        username = payload.get("sub")
+
+        if username is None:
+            raise JWTError("Token does not contain a subject")
+
+        return username
+
+    except JWTError:
+        raise
+
